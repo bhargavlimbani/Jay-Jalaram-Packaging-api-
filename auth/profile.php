@@ -4,14 +4,15 @@ include("../config/db.php");
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-// GET profile: /auth/profile.php?user_id=1
+// ================= GET PROFILE =================
 if ($method === "GET") {
-    $user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
 
-    if ($user_id <= 0) {
-        echo json_encode(["status" => "error", "message" => "Missing or invalid user_id"]);
+    if (!isset($_GET['user_id'])) {
+        echo json_encode(["status" => "error", "message" => "user_id required"]);
         exit;
     }
+
+    $user_id = intval($_GET['user_id']);
 
     $stmt = $conn->prepare("SELECT id, name, email, phone, address FROM users WHERE id = ?");
     $stmt->bind_param("i", $user_id);
@@ -28,26 +29,27 @@ if ($method === "GET") {
     exit;
 }
 
-// UPDATE profile: POST JSON
+// ================= UPDATE PROFILE =================
 if ($method === "POST") {
-    $data = json_decode(file_get_contents("php://input"));
 
-    $user_id = isset($data->user_id) ? intval($data->user_id) : 0;
-    $name = isset($data->name) ? trim($data->name) : "";
-    $email = isset($data->email) ? trim($data->email) : "";
-    $phone = isset($data->phone) ? trim($data->phone) : "";
-    $address = isset($data->address) ? trim($data->address) : "";
+    $data = json_decode(file_get_contents("php://input"), true);
 
-    if ($user_id <= 0) {
-        echo json_encode(["status" => "error", "message" => "Missing or invalid user_id"]);
+    if (!isset($data['user_id'])) {
+        echo json_encode(["status" => "error", "message" => "user_id required"]);
         exit;
     }
 
-    $stmt = $conn->prepare("UPDATE users SET name = ?, email = ?, phone = ?, address = ? WHERE id = ?");
+    $user_id = intval($data['user_id']);
+    $name = $data['name'] ?? "";
+    $email = $data['email'] ?? "";
+    $phone = $data['phone'] ?? "";
+    $address = $data['address'] ?? "";
+
+    $stmt = $conn->prepare("UPDATE users SET name=?, email=?, phone=?, address=? WHERE id=?");
     $stmt->bind_param("ssssi", $name, $email, $phone, $address, $user_id);
 
     if ($stmt->execute()) {
-        echo json_encode(["status" => "success", "message" => "Profile updated"]);
+        echo json_encode(["status" => "success", "message" => "Profile updated successfully"]);
     } else {
         echo json_encode(["status" => "error", "message" => "Update failed"]);
     }
@@ -56,5 +58,5 @@ if ($method === "POST") {
     exit;
 }
 
-echo json_encode(["status" => "error", "message" => "Invalid request method"]);
+echo json_encode(["status" => "error", "message" => "Invalid request"]);
 ?>
