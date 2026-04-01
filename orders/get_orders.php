@@ -3,7 +3,7 @@ include("../config/db.php");
 
 header("Content-Type: application/json");
 
-// 🔥 GET USER ID (from request)
+// GET JSON
 $data = json_decode(file_get_contents("php://input"), true);
 
 $user_id = isset($data['user_id']) ? intval($data['user_id']) : 0;
@@ -13,14 +13,14 @@ if ($user_id <= 0) {
     exit;
 }
 
-// 🔥 FETCH USER INVOICES
-$result = $conn->query("SELECT * FROM invoices WHERE user_id='$user_id' ORDER BY id DESC");
+// 🔥 FILTER BY USER
+$result = $conn->query("SELECT * FROM orders WHERE user_id='$user_id' ORDER BY id DESC");
 
-$invoices = [];
+$orders = [];
 
 while ($row = $result->fetch_assoc()) {
-    $invoices[] = $row;
+    $orders[] = $row;
 }
 
-echo json_encode($invoices);
+echo json_encode($orders);
 ?>

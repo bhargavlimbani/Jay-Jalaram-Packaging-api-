@@ -1,29 +1,36 @@
 <?php
-header("Content-Type: application/json");
 include("../config/db.php");
 
-$data = json_decode(file_get_contents("php://input"), true);
+$id = $_POST['id'];
+$name = $_POST['name'];
+$price = $_POST['price'];
+$box_type = $_POST['box_type'];
+$description = $_POST['description'];
+$stock = $_POST['stock'];
 
-$id = $data['id'] ?? 0;
-$name = $data['name'] ?? '';
-$email = $data['email'] ?? '';
-$phone = $data['phone'] ?? '';
-$address = $data['address'] ?? '';
+$image_sql = "";
 
-if ($id <= 0) {
-    echo json_encode(["status"=>"error","message"=>"Invalid ID"]);
-    exit;
+// 🔥 ONLY UPDATE IMAGE IF NEW IMAGE UPLOADED
+if (isset($_FILES['image']) && $_FILES['image']['tmp_name'] != "") {
+    $image_data = base64_encode(file_get_contents($_FILES['image']['tmp_name']));
+    $image_data = "data:image/jpeg;base64," . $image_data;
+
+    $image_sql = ", image_data='$image_data'";
 }
 
-$stmt = $conn->prepare("
-UPDATE users SET name=?, email=?, phone=?, address=? WHERE id=?
-");
+// 🔥 MAIN UPDATE
+$sql = "UPDATE products SET 
+name='$name',
+price='$price',
+box_type='$box_type',
+description='$description',
+stock='$stock'
+$image_sql
+WHERE id='$id'";
 
-$stmt->bind_param("ssssi", $name, $email, $phone, $address, $id);
-
-if ($stmt->execute()) {
-    echo json_encode(["status"=>"success","message"=>"Customer Updated"]);
+if ($conn->query($sql)) {
+    echo json_encode(["status"=>"success","message"=>"Updated"]);
 } else {
-    echo json_encode(["status"=>"error","message"=>$stmt->error]);
+    echo json_encode(["status"=>"error","message"=>$conn->error]);
 }
 ?>
