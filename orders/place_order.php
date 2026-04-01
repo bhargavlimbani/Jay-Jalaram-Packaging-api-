@@ -1,10 +1,10 @@
 <?php
 include("../config/db.php");
 
-// ✅ TIMEZONE FIX
+// ✅ TIMEZONE
 date_default_timezone_set("Asia/Kolkata");
 
-// GET JSON DATA
+// GET JSON
 $data = json_decode(file_get_contents("php://input"));
 
 // ❌ CHECK DATA
@@ -18,7 +18,7 @@ if (!$data || !isset($data->items)) {
 
 $items = $data->items;
 
-// ✅ GET USER ID
+// ✅ USER ID
 $user_id = isset($data->user_id) ? intval($data->user_id) : 0;
 
 if ($user_id <= 0) {
@@ -29,7 +29,7 @@ if ($user_id <= 0) {
     exit;
 }
 
-// ✅ GET USER DETAILS
+// ✅ USER DETAILS
 $user_result = $conn->query("SELECT name, phone FROM users WHERE id = '$user_id'");
 
 if ($user_result->num_rows == 0) {
@@ -55,9 +55,15 @@ $new_items = [];
 foreach ($items as $item) {
 
     $product_id = intval($item->product_id);
-    $qty = intval($item->quantity);
 
-    // 🔥 GET PRODUCT FROM DB
+    // 🔥 FIX HERE (IMPORTANT)
+    $qty = isset($item->qty)
+        ? intval($item->qty)
+        : (isset($item->quantity) ? intval($item->quantity) : 0);
+
+    if ($qty <= 0) continue;
+
+    // GET PRODUCT
     $product_result = $conn->query("SELECT name, price, image_data FROM products WHERE id = '$product_id'");
 
     if ($product_result->num_rows == 0) {
@@ -68,11 +74,11 @@ foreach ($items as $item) {
 
     $price = floatval($product['price']);
 
-    // CALCULATE TOTAL
+    // CALCULATE
     $total += $price * $qty;
     $total_qty += $qty;
 
-    // ✅ STORE FULL ITEM DETAILS
+    // STORE ITEM
     $new_items[] = [
         "product_id" => $product_id,
         "name" => $product['name'],
@@ -82,7 +88,7 @@ foreach ($items as $item) {
     ];
 }
 
-// ❌ IF NO VALID ITEMS
+// ❌ NO VALID ITEMS
 if (empty($new_items)) {
     echo json_encode([
         "status" => "error",
@@ -91,7 +97,7 @@ if (empty($new_items)) {
     exit;
 }
 
-// ✅ CONVERT TO JSON
+// JSON
 $items_json = json_encode($new_items);
 
 // =========================
