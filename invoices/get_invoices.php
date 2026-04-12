@@ -3,18 +3,8 @@ include("../config/db.php");
 
 header("Content-Type: application/json");
 
-// 🔥 GET USER ID (from request)
-$data = json_decode(file_get_contents("php://input"), true);
-
-$user_id = isset($data['user_id']) ? intval($data['user_id']) : 0;
-
-if ($user_id <= 0) {
-    echo json_encode([]);
-    exit;
-}
-
-// 🔥 FETCH USER INVOICES
-$result = $conn->query("SELECT * FROM invoices WHERE user_id='$user_id' ORDER BY id DESC");
+// 🔥 FETCH ALL INVOICES (ADMIN)
+$result = $conn->query("SELECT * FROM invoices ORDER BY id DESC");
 
 $invoices = [];
 
